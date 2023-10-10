@@ -1,0 +1,11 @@
+{
+  "name": "easy_file_transfer",
+  "version": "1.0.0",
+  "description": "This is a self-hosted application that can be used to easily transfer files to others.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Alfred De La Costa",
+  "license": "ISC"
+}
