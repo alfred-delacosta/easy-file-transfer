@@ -7,12 +7,6 @@ const { createToken } = require('../Library/jwtFunctions');
 
 //TODO Setup passportJs and the JWT here eventually.
 
-router.get('/:userId', async (req, res) => {
-    const userId = req.params.userId;
-
-    res.send(userId);
-})
-
 router.post('/create', async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
@@ -34,7 +28,7 @@ router.post('/create', async (req, res) => {
 
         const savedUser = await newUser.save();
 
-        const token = createToken(savedUser);
+        const token = await createToken(savedUser);
 
         // token = jwt.sign({
         //     data: savedUser
@@ -44,21 +38,35 @@ router.post('/create', async (req, res) => {
 
         res.send({ msg: 'User created successfully.', user: savedUser });
     } catch (error) {
+        console.log(error);
         res.status(400).send({ msg: "There was an error processing the request. ", error });
         
     }
 })
 
 router.post('/login', async (req, res) => {
-    // TODO Figure out what's going on here with the cookies. For some reason token is coming back as empty...
     const username = req.body.username;
     const password = req.body.password;
-    const cookies = req.cookies;
 
-    console.log(cookies.token);
-    console.log(req.signedCookies);
+    const user = (await User.find({ username: username }))[0];
+    
+    // Check to see if the login is correct
+    if (await argon2.verify(user.password, password)) {
+        const token = await createToken(user);
 
-    res.send(cookies)
+        res.cookie('token', token, { httpOnly: true })
+
+        res.send(user);
+        return;
+    }
+
+    res.send("No user found!")
+})
+
+router.get('/:userId', async (req, res) => {
+    const userId = req.params.userId;
+
+    res.send(userId);
 })
 
 module.exports = router;
