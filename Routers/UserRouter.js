@@ -48,7 +48,7 @@ router.post('/login', async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
 
-    const user = (await User.find({ username: username }))[0];
+    const user = await User.findOne({ username: username });
     
     // Check to see if the login is correct
     if (await argon2.verify(user.password, password)) {
