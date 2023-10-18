@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const passport = require('passport');
 
 //#region Routers
 const userRouter = require('./Routers/UserRouter');
@@ -20,6 +21,7 @@ connectDb();
 
 app.use(cors());
 app.use(cookieParser());
+app.use(passport.initialize());
 
 app.use('/users', userRouter);
 

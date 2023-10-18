@@ -3,7 +3,9 @@ const router = express.Router();
 const argon2 = require('argon2');
 const User = require('../Models/User');
 const jwt = require('jsonwebtoken');
-const { createToken } = require('../Library/jwtFunctions');
+const { createToken, createRefreshToken } = require('../Library/jwtFunctions');
+const passport = require('passport');
+require('../Library/userAuthenticationMiddleware');
 
 //TODO Setup passportJs and the JWT here eventually.
 
@@ -44,6 +46,11 @@ router.post('/create', async (req, res) => {
     }
 })
 
+// This determines if the user needs to login in again or not.
+router.get('/login', passport.authenticate('jwt', { session: false}), async (req, res) => {
+    res.send(true);
+})
+
 router.post('/login', async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
@@ -53,17 +60,18 @@ router.post('/login', async (req, res) => {
     // Check to see if the login is correct
     if (await argon2.verify(user.password, password)) {
         const token = await createToken(user);
+        const refreshToken = await createRefreshToken(user);
 
-        res.cookie('token', token, { httpOnly: true })
+        res.cookie('refreshToken', refreshToken, { httpOnly: true })
 
-        res.send(user);
+        res.send({user, token});
         return;
     }
 
     res.send("No user found!")
 })
 
-router.get('/:userId', async (req, res) => {
+router.get('/protectedRoute/:userId', passport.authenticate('jwt', { session: false}), async (req, res) => {
     const userId = req.params.userId;
 
     res.send(userId);
