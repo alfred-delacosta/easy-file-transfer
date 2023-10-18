@@ -6,6 +6,7 @@ const passport = require('passport');
 
 //#region Routers
 const userRouter = require('./Routers/UserRouter');
+const authRouter = require('./Routers/AuthRouter');
 //#endregion
 
 const connectDb = require('./DB/DB');
@@ -24,6 +25,7 @@ app.use(cookieParser());
 app.use(passport.initialize());
 
 app.use('/users', userRouter);
+app.use('/auth', authRouter);
 
 
 app.listen(port, () => {

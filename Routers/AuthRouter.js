@@ -7,13 +7,23 @@ const { createToken, createRefreshToken } = require('../Library/jwtFunctions');
 const passport = require('passport');
 require('../Library/userAuthenticationMiddleware');
 
-router.pose("/renewTokens", async(req, res) => {
-    // TODO Every time an access token is renewed, the refresh token should be renewed as well.
+router.post("/renewTokens", passport.authenticate('jwt', { session: false}), async (req, res) => {
+    // Every time the user requests a new access token, a new refresh token will be sent as well. The old token will be saved in the DB
+    // to ensure that it can no longer be used.
+    try {
+        const user = await User.findById(req.user._id);
+        user.addExpiredRefreshToken(req.cookies.refreshToken);
+        await user.save();
+    
+        const token = await createToken(user);
+        const refreshToken = await createRefreshToken(user);
+    
+        res.cookie('refreshToken', refreshToken, { httpOnly: true });
+    
+        res.send({ token });   
+    } catch (error) {
+        res.status(400).send({ msg: "There was an error.", error });
+    }
+});
 
-    // User A has RT 1
-    // User A gets RT 2
-
-    // User B gets RT 1
-
-    // How do we know that RT 1 is expired?
-})
+module.exports = router;

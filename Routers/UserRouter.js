@@ -7,8 +7,6 @@ const { createToken, createRefreshToken } = require('../Library/jwtFunctions');
 const passport = require('passport');
 require('../Library/userAuthenticationMiddleware');
 
-//TODO Setup passportJs and the JWT here eventually.
-
 router.post('/create', async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
@@ -20,7 +18,6 @@ router.post('/create', async (req, res) => {
 
     try {
         let newUser = new User();
-        // let token = {};
 
         // Hash the password
         const hash = await argon2.hash(password);
@@ -31,14 +28,11 @@ router.post('/create', async (req, res) => {
         const savedUser = await newUser.save();
 
         const token = await createToken(savedUser);
+        const refreshToken = await createRefreshToken(savedUser);
 
-        // token = jwt.sign({
-        //     data: savedUser
-        // }, process.env.TOKEN_SECRET, { expiresIn: '1h' });
+        res.cookie('refreshToken', refreshToken, { httpOnly: true });
 
-        res.cookie('token', token, { httpOnly: true })
-
-        res.send({ msg: 'User created successfully.', user: savedUser });
+        res.send({ msg: 'User created successfully.', token });
     } catch (error) {
         console.log(error);
         res.status(400).send({ msg: "There was an error processing the request. ", error });
@@ -46,7 +40,7 @@ router.post('/create', async (req, res) => {
     }
 })
 
-// This determines if the user needs to login in again or not.
+// TODO This will be used to determine if the user needs to login again when clicking on the /login route. May not need it though...
 router.get('/login', passport.authenticate('jwt', { session: false}), async (req, res) => {
     res.send(true);
 })
@@ -64,13 +58,14 @@ router.post('/login', async (req, res) => {
 
         res.cookie('refreshToken', refreshToken, { httpOnly: true })
 
-        res.send({user, token});
+        res.send({ token });
         return;
+    } else {
+        res.send("No user found!")
     }
-
-    res.send("No user found!")
 })
 
+// TODO Remove this eventually. This is just used for testing.
 router.get('/protectedRoute/:userId', passport.authenticate('jwt', { session: false}), async (req, res) => {
     const userId = req.params.userId;
 
